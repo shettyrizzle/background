@@ -8,14 +8,19 @@ train_masks_dir = "D:/bgremoval/data/coco/train2017_person_only_masks/"
 val_images_dir = "D:/bgremoval/data/coco/val2017_person_only/"
 val_masks_dir = "D:/bgremoval/data/coco/val2017_person_only_masks/"
 
+IMG_HEIGHT = 256
+IMG_WIDTH = 256
+
 def load_image_mask(image_path, mask_path):
     image = tf.io.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.resize(image, [IMG_HEIGHT, IMG_WIDTH])
     
     mask = tf.io.read_file(mask_path)
     mask = tf.image.decode_png(mask, channels=1)
     mask = tf.image.convert_image_dtype(mask, tf.float32)
+    mask = tf.image.resize(mask, [IMG_HEIGHT, IMG_WIDTH])
     
     return image, mask
 
@@ -47,13 +52,9 @@ def load_dataset(image_dir, mask_dir, batch_size):
     
     return dataset
 
-batch_size = 8
+batch_size = 4
 train_dataset = load_dataset(train_images_dir, train_masks_dir, batch_size)
 val_dataset = load_dataset(val_images_dir, val_masks_dir, batch_size)
-
-# Save the datasets
-tf.data.experimental.save(train_dataset, 'train_dataset')
-tf.data.experimental.save(val_dataset, 'val_dataset')
 
 # Save metadata (if necessary)
 metadata = {
@@ -61,3 +62,5 @@ metadata = {
 }
 
 np.save('metadata.npy', metadata)
+
+# No need to save datasets to disk, they will be created on-the-fly in training script
